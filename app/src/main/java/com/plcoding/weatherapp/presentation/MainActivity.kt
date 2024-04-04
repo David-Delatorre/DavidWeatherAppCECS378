@@ -39,8 +39,8 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
-        Manifest.permission.CALL_PHONE
-    )
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.SYSTEM_ALERT_WINDOW)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

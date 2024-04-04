@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WeatherApp</string>
+    <string name="web_client_id">624017051763-cqk1e5cb3asmqehn36el9asita1bh397.apps.googleusercontent.com</string>
 </resources>
