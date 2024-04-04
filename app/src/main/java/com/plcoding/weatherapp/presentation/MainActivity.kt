@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.ui.Alignment
@@ -45,9 +46,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
-        ) {
-            permissions_map ->
-            if (permissions_map[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions_map[Manifest.permission.ACCESS_COARSE_LOCATION] == true){
+        ) { permissions_map ->
+            if (permissions_map[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions_map[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
                 viewModel.loadWeatherInfo()
             }
             permissionsToRequest.forEach { current_permission ->
@@ -71,19 +71,25 @@ class MainActivity : ComponentActivity() {
                                 Manifest.permission.ACCESS_FINE_LOCATION -> {
                                     FineLocationPermissionTextProvider()
                                 }
+
                                 Manifest.permission.RECORD_AUDIO -> {
                                     RecordAudioPermissionTextProvider()
                                 }
+
                                 Manifest.permission.CALL_PHONE -> {
                                     PhoneCallPermissionTextProvider()
                                 }
+
                                 else -> return@forEach
                             },
                             isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
-                                permission),
-                            onDismiss = { mainViewModel::dismissDialog},
-                            onOkClick = { mainViewModel.dismissDialog()
-                                        permissionLauncher.launch(arrayOf(permission))},
+                                permission
+                            ),
+                            onDismiss = { mainViewModel::dismissDialog },
+                            onOkClick = {
+                                mainViewModel.dismissDialog()
+                                permissionLauncher.launch(arrayOf(permission))
+                            },
                             onGoToAppSettingsClick = ::openAppSettings
                         )
                     }
@@ -102,8 +108,17 @@ class MainActivity : ComponentActivity() {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         WeatherForecast(state = viewModel.state)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            Intent(applicationContext, SecondActivity::class.java).also {
+                                startActivity(it)
+                            }
+                        }
+                        ) {
+                            Text(text = "Click here if you want this app to send you hourly notifications")
+                        }
                     }
-                    if(viewModel.state.isLoading) {
+                    if (viewModel.state.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.align(Alignment.Center)
                         )
@@ -120,10 +135,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }
-
-
-fun Activity.openAppSettings() {
+    fun Activity.openAppSettings() {
     Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
         Uri.fromParts("package", packageName, null)
