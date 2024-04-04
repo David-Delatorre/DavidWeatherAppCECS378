@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         ) {
-                            Text(text = "Click here if you want this app to send you hourly notifications")
+                            Text(text = "Click here to sign into Firebase")
                         }
                     }
                     if (viewModel.state.isLoading) {
