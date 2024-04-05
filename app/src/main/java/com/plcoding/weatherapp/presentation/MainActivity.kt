@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.plcoding.weatherapp.presentation.ui.theme.DarkBlue
 import com.plcoding.weatherapp.presentation.ui.theme.DeepBlue
 import com.plcoding.weatherapp.presentation.ui.theme.WeatherAppTheme
@@ -31,6 +33,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private val locationCollectionRef = Firebase.firestore.collection("location")
     private val mainViewModel: MainViewModel by viewModels()
     private val viewModel: WeatherViewModel by viewModels()
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
