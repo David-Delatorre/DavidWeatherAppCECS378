@@ -2,6 +2,7 @@ package com.plcoding.weatherapp.presentation
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -113,9 +114,26 @@ class MainActivity : ComponentActivity() {
                         WeatherForecast(state = viewModel.state)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = {
-                            Intent(applicationContext, SecondActivity::class.java).also {
-                                startActivity(it)
-                            }
+//                            Intent(applicationContext, SecondActivity::class.java).also {
+//                                startActivity(it)
+//                            }
+//                            Intent(Intent.ACTION_MAIN).also {
+//                                it.`package` = "com.plcoding.backgroundlocationtracking"
+//                                try {
+//                                    startActivity(it)
+//                                } catch (e: ActivityNotFoundException){
+//                                    e.printStackTrace()
+//                                }
+//                            }
+//                            val intent = Intent(Intent.ACTION_SEND).apply {
+//                                type = "text/plain"
+//                                putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.com"))
+//                                putExtra(Intent.EXTRA_SUBJECT, "Test message")
+//                                putExtra(Intent.EXTRA_TEXT, "Content")
+//                            }
+//                            if(intent.resolveActivity(packageManager) != null){
+//                                startActivity(intent)
+//                            }
                         }
                         ) {
                             Text(text = "Click here to sign into Firebase")
