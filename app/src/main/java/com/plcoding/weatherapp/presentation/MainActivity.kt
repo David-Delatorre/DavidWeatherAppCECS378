@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -23,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.plcoding.weatherapp.presentation.ui.theme.DarkBlue
@@ -113,18 +111,19 @@ class MainActivity : ComponentActivity() {
                         Spacer(modifier = Modifier.height(16.dp))
                         WeatherForecast(state = viewModel.state)
                         Spacer(modifier = Modifier.height(16.dp))
+
                         Button(onClick = {
 //                            Intent(applicationContext, SecondActivity::class.java).also {
 //                                startActivity(it)
 //                            }
-//                            Intent(Intent.ACTION_MAIN).also {
-//                                it.`package` = "com.plcoding.backgroundlocationtracking"
-//                                try {
-//                                    startActivity(it)
-//                                } catch (e: ActivityNotFoundException){
-//                                    e.printStackTrace()
-//                                }
-//                            }
+                            Intent(Intent.ACTION_MAIN).also {
+                                it.`package` = "com.plcoding.backgroundlocationtracking"
+                                try {
+                                    startActivity(it)
+                                } catch (e: ActivityNotFoundException){
+                                    e.printStackTrace()
+                                }
+                            }
 //                            val intent = Intent(Intent.ACTION_SEND).apply {
 //                                type = "text/plain"
 //                                putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.com"))
@@ -136,7 +135,7 @@ class MainActivity : ComponentActivity() {
 //                            }
                         }
                         ) {
-                            Text(text = "Click here to sign into Firebase")
+                            Text(text = "Allow Background Tracking")
                         }
                     }
                     if (viewModel.state.isLoading) {
