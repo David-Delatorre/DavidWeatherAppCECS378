@@ -16,6 +16,7 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.TYPE_APPLICATION_OVERLAY" />
 
 
     <application
@@ -26,7 +27,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WeatherApp">
-        <service android:name=".presentation.ui.theme.LocationService" android:foregroundServiceType="location" />
+        <service android:name=".LocationService" android:foregroundServiceType="location" />
+        <service android:name=".presentation.ui.theme.OverlayService" />
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"

@@ -2,9 +2,11 @@ package com.plcoding.weatherapp.presentation
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -14,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
@@ -22,12 +25,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.plcoding.weatherapp.LocationService
+import com.plcoding.weatherapp.data.location.DefaultLocationTracker
+import com.plcoding.weatherapp.domain.location.LocationTracker
 import com.plcoding.weatherapp.presentation.ui.theme.DarkBlue
 import com.plcoding.weatherapp.presentation.ui.theme.DeepBlue
+import com.plcoding.weatherapp.presentation.ui.theme.OverlayService
 import com.plcoding.weatherapp.presentation.ui.theme.WeatherAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.format.DateTimeFormatter
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -49,7 +58,8 @@ class MainActivity : ComponentActivity() {
         permissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions_map ->
-            if (permissions_map[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions_map[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+            if (permissions_map[Manifest.permission.ACCESS_FINE_LOCATION] == true
+                || permissions_map[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
                 viewModel.loadWeatherInfo()
             }
             permissionsToRequest.forEach { current_permission ->
@@ -64,7 +74,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             WeatherAppTheme {
                 val dialogQueue = mainViewModel.visiblePermissionDialogQueue
-
                 dialogQueue
                     .reversed()
                     .forEach { permission ->
@@ -104,6 +113,7 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .background(DarkBlue)
                     ) {
+
                         WeatherCard(
                             state = viewModel.state,
                             backgroundColor = DeepBlue
@@ -111,19 +121,43 @@ class MainActivity : ComponentActivity() {
                         Spacer(modifier = Modifier.height(16.dp))
                         WeatherForecast(state = viewModel.state)
                         Spacer(modifier = Modifier.height(16.dp))
-
                         Button(onClick = {
-//                            Intent(applicationContext, SecondActivity::class.java).also {
-//                                startActivity(it)
-//                            }
-                            Intent(Intent.ACTION_MAIN).also {
-                                it.`package` = "com.plcoding.backgroundlocationtracking"
-                                try {
-                                    startActivity(it)
-                                } catch (e: ActivityNotFoundException){
-                                    e.printStackTrace()
-                                }
+                            Intent(applicationContext, LocationService::class.java).apply {
+                                action = LocationService.ACTION_START
+                                startService(this)
                             }
+                        }) {
+                            Text(text = "Start")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            Intent(applicationContext, LocationService::class.java).apply {
+                                action = LocationService.ACTION_STOP
+                                startService(this)
+                            }
+                        }) {
+                            Text(text = "Stop")
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            Intent(applicationContext, SecondActivity::class.java).also {
+                                startActivity(it)
+                            }
+//                            Intent(Intent.ACTION_MAIN).also {
+//                                it.`package` = "com.plcoding.backgroundlocationtracking"
+//                                try {
+//                                    startActivity(it)
+//                                } catch (e: ActivityNotFoundException){
+//                                    e.printStackTrace()
+//                                }
+//                            }
+//                            val overlayIntent = Intent(applicationContext, OverlayService::class.java)
+//
+//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                                startForegroundService(overlayIntent)
+//                            } else {
+//                                startService(overlayIntent)
+//                            }
 //                            val intent = Intent(Intent.ACTION_SEND).apply {
 //                                type = "text/plain"
 //                                putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.com"))
@@ -135,7 +169,7 @@ class MainActivity : ComponentActivity() {
 //                            }
                         }
                         ) {
-                            Text(text = "Allow Background Tracking")
+                            Text(text = "Firebase Sign In")
                         }
                     }
                     if (viewModel.state.isLoading) {
@@ -163,4 +197,6 @@ class MainActivity : ComponentActivity() {
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
         Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
-}
+    }
+
+
