@@ -1,12 +1,19 @@
-package com.plcoding.weatherapp
+package com.plcoding.weatherapp.presentation
+
 
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.plcoding.weatherapp.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -41,6 +48,9 @@ class LocationService: Service() {
     }
 
     private fun start() {
+        val firebaseDatabase = FirebaseDatabase.getInstance()
+        val databaseReference = firebaseDatabase.getReference("LocationInfo")
+
         val notification = NotificationCompat.Builder(this, "location")
             .setContentTitle("Tracking location...")
             .setContentText("Location: null")
@@ -58,6 +68,40 @@ class LocationService: Service() {
                 val updatedNotification = notification.setContentText(
                     "Location: ($lat, $long)"
                 )
+
+                val locationObj = LocationObj(lat, long)
+                val newDatabaseReference = databaseReference.push()
+                // we are using add value event listener method
+                // which is called with database reference.
+                databaseReference.addValueEventListener(object :
+                    ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        // inside the method of on Data change we are setting
+                        // our object class to our database reference.
+                        // data base reference sends data to firebase.
+                        newDatabaseReference.setValue(locationObj)
+
+                        // after adding this data we
+                        // are showing toast message.
+                        Toast.makeText(
+                            applicationContext,
+                            "Data added to Firebase Database",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        // if the data is not added or it is cancelled then
+                        // we are displaying a failure toast message.
+                        Toast.makeText(
+                            applicationContext,
+                            "Fail to add data $error",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                })
+
+
                 notificationManager.notify(1, updatedNotification.build())
             }
             .launchIn(serviceScope)

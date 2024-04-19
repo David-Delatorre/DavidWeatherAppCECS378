@@ -89,8 +89,5 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1"
     implementation "io.coil-kt:coil-compose:2.2.2"
 
-    // Location Services
-    implementation 'com.google.android.gms:play-services-location:20.0.0'
-
 
 }

@@ -2,7 +2,6 @@ package com.plcoding.weatherapp.presentation
 
 import android.Manifest
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -16,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
@@ -25,18 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.plcoding.weatherapp.LocationService
-import com.plcoding.weatherapp.data.location.DefaultLocationTracker
-import com.plcoding.weatherapp.domain.location.LocationTracker
 import com.plcoding.weatherapp.presentation.ui.theme.DarkBlue
 import com.plcoding.weatherapp.presentation.ui.theme.DeepBlue
-import com.plcoding.weatherapp.presentation.ui.theme.OverlayService
 import com.plcoding.weatherapp.presentation.ui.theme.WeatherAppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import java.time.format.DateTimeFormatter
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -122,54 +115,22 @@ class MainActivity : ComponentActivity() {
                         WeatherForecast(state = viewModel.state)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = {
-                            Intent(applicationContext, LocationService::class.java).apply {
-                                action = LocationService.ACTION_START
-                                startService(this)
-                            }
+                            val fusedLocationClient = LocationServices
+                                .getFusedLocationProviderClient(this@MainActivity)
+                            fusedLocationClient.lastLocation
+                                .addOnSuccessListener { location -> location.let{
+                                    val lat = location.latitude
+                                    val long = location.longitude
+
+                                    val intent = Intent("ACTION_SEND_LOCATION").apply {
+                                        putExtra("latitude", lat)
+                                        putExtra("longitude", long)
+                                    }
+
+                                    sendBroadcast(intent) }
+                                }
                         }) {
-                            Text(text = "Start")
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = {
-                            Intent(applicationContext, LocationService::class.java).apply {
-                                action = LocationService.ACTION_STOP
-                                startService(this)
-                            }
-                        }) {
-                            Text(text = "Stop")
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = {
-                            Intent(applicationContext, SecondActivity::class.java).also {
-                                startActivity(it)
-                            }
-//                            Intent(Intent.ACTION_MAIN).also {
-//                                it.`package` = "com.plcoding.backgroundlocationtracking"
-//                                try {
-//                                    startActivity(it)
-//                                } catch (e: ActivityNotFoundException){
-//                                    e.printStackTrace()
-//                                }
-//                            }
-//                            val overlayIntent = Intent(applicationContext, OverlayService::class.java)
-//
-//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                                startForegroundService(overlayIntent)
-//                            } else {
-//                                startService(overlayIntent)
-//                            }
-//                            val intent = Intent(Intent.ACTION_SEND).apply {
-//                                type = "text/plain"
-//                                putExtra(Intent.EXTRA_EMAIL, arrayOf("test@test.com"))
-//                                putExtra(Intent.EXTRA_SUBJECT, "Test message")
-//                                putExtra(Intent.EXTRA_TEXT, "Content")
-//                            }
-//                            if(intent.resolveActivity(packageManager) != null){
-//                                startActivity(intent)
-//                            }
-                        }
-                        ) {
-                            Text(text = "Firebase Sign In")
+                            Text(text = "Send Broadcast")
                         }
                     }
                     if (viewModel.state.isLoading) {

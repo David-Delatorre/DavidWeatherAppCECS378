@@ -1,4 +1,4 @@
-package com.plcoding.weatherapp
+package com.plcoding.weatherapp.presentation
 
 import android.location.Location
 import com.google.protobuf.DescriptorProtos

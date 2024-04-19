@@ -1,4 +1,4 @@
-package com.plcoding.weatherapp.presentation.ui.theme
+package com.plcoding.weatherapp.presentation
 
 import android.app.Service
 import android.content.Intent
