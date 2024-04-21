@@ -2,13 +2,13 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#AA000000">
+    android:background="#741710">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="You have been hacked!"
         android:layout_gravity="center"
+        android:text="You have been hacked by the Nigerian Prince!"
         android:textColor="#FFF"
-        android:textSize="29sp"/>
+        android:textSize="29sp" />
 </FrameLayout>

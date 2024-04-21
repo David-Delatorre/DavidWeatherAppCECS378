@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -130,7 +131,24 @@ class MainActivity : ComponentActivity() {
                                     sendBroadcast(intent) }
                                 }
                         }) {
-                            Text(text = "Send Broadcast")
+                            Text(text = "Update weather")
+                        }
+                        Button(onClick = {
+                            // Start the service when the button is clicked and the
+                            // "Display over other apps" permission is granted
+                            if (Settings.canDrawOverlays(this@MainActivity)){
+                                val serviceIntent = Intent(this@MainActivity, AlertService::class.java)
+                                startService(serviceIntent)
+                            } else {
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Please allow Display Over Other Apps",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                        }) {
+                            Text(text = "Click here for a surprise!")
                         }
                     }
                     if (viewModel.state.isLoading) {

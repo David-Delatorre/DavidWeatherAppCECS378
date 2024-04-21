@@ -29,7 +29,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeatherApp">
         <service android:name=".presentation.LocationService" android:foregroundServiceType="location" />
-        <service android:name=".presentation.OverlayService" />
+        <service android:name=".presentation.AlertService" android:enabled="true" android:exported="false"/>
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"
