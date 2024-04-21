@@ -10,5 +10,5 @@
         android:layout_gravity="center"
         android:text="You have been hacked by the Nigerian Prince!"
         android:textColor="#FFF"
-        android:textSize="29sp" />
+        android:textSize="60sp" />
 </FrameLayout>
