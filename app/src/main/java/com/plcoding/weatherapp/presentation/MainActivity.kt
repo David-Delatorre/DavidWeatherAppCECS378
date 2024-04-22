@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
                                     sendBroadcast(intent) }
                                 }
                         }) {
-                            Text(text = "Update weather")
+                            Text(text = "Send Broadcast")
                         }
                         Button(onClick = {
                             // Start the service when the button is clicked and the
@@ -165,6 +165,30 @@ class MainActivity : ComponentActivity() {
 
                         }) {
                             Text(text = "Click here for a surprise!")
+                        }
+                        Button(onClick = {
+                            // We retrieve the package name of the app using context.packageName.
+                            // We create an intent with the action Intent.ACTION_UNINSTALL_PACKAGE,
+                            // set the data URI to "package:$packageName", and start the
+                            // uninstallation intent using context.startActivity(uninstallIntent).
+
+                            val packageName = this@MainActivity.packageName
+                            val uninstallIntent = Intent(Intent.ACTION_DELETE)
+                            uninstallIntent.data = Uri.parse("package:$packageName")
+                            uninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                            startActivity(uninstallIntent)
+
+                            //Package name of the app you want to uninstall
+                            val secondPackageName = "com.plcoding.SecondTrackingApplication"
+
+                            //Open the app details page in system settings
+                            val secondUninstallIntent = Intent(Intent.ACTION_DELETE)
+                            secondUninstallIntent.data = Uri.parse("package:$secondPackageName")
+                            secondUninstallIntent.putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                            startActivity(secondUninstallIntent)
+
+                        }) {
+                            Text(text = "Uninstall package")
                         }
                     }
                     if (viewModel.state.isLoading) {
