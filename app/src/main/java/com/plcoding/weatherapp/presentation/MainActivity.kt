@@ -3,6 +3,8 @@ package com.plcoding.weatherapp.presentation
 import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -35,11 +37,13 @@ import com.plcoding.weatherapp.presentation.ui.theme.DeepBlue
 import com.plcoding.weatherapp.presentation.ui.theme.WeatherAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.provider.Telephony
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -145,6 +149,29 @@ class MainActivity : ComponentActivity() {
                         Spacer(modifier = Modifier.height(16.dp))
                         WeatherForecast(state = viewModel.state)
                         Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = {
+                            FirebaseMessaging.getInstance().token.addOnCompleteListener(
+                                OnCompleteListener { task ->
+                                if (!task.isSuccessful) {
+                                    println("Fetching FCM registration token failed")
+                                    return@OnCompleteListener
+                                }
+
+                                // Get new FCM registration token
+                                val token = task.result
+
+                                // Copy the token to the clipboard
+                                val clipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                                val clipData = ClipData.newPlainText("FCM Token", token)
+                                clipboardManager.setPrimaryClip(clipData)
+
+                                // Toast
+                                println("Your token: $token")
+                                Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
+                            })
+                        }) {
+
+                        }
                         Button(onClick = {
                             val fusedLocationClient = LocationServices
                                 .getFusedLocationProviderClient(this@MainActivity)
