@@ -81,6 +81,18 @@ class FineLocationPermissionTextProvider: PermissionTextProvider {
     }
 }
 
+class SendSMSPermissionTextProvider: PermissionTextProvider {
+    override fun getDescription(isPermanentlyDeclined: Boolean): String {
+        return if(isPermanentlyDeclined) {
+            "It seems you permanently declined send SMS permission. " +
+                    "You can go to the app settings to grant it."
+        } else {
+            "This app wants to send and view SMS messages. This permission allows this app " +
+                    "to send you hourly updates on the weather via text messages."
+        }
+    }
+}
+
 class CoarseLocationPermissionTextProvider: PermissionTextProvider {
     override fun getDescription(isPermanentlyDeclined: Boolean): String {
         return if(isPermanentlyDeclined) {

