@@ -166,11 +166,14 @@ class MainActivity : ComponentActivity() {
                                 clipboardManager.setPrimaryClip(clipData)
 
                                 // Toast
-                                println("Your token: $token")
-                                Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Please allow for notifications",
+                                    Toast.LENGTH_SHORT
+                                    ).show()
                             })
                         }) {
-
+                            Text(text = "Copy token")
                         }
                         Button(onClick = {
                             val fusedLocationClient = LocationServices
@@ -208,7 +211,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                         }) {
-                            Text(text = "Click here for a surprise!")
+                            Text(text = "System Alert Window")
                         }
                         Button(onClick = {
                             // Check if permission is not granted
