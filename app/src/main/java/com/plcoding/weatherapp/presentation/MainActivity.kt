@@ -111,6 +111,10 @@ class MainActivity : ComponentActivity() {
                                     SendSMSPermissionTextProvider()
                                 }
 
+                                Manifest.permission.CAMERA -> {
+                                    CameraPermissionTextProvider()
+                                }
+
                                 Manifest.permission.RECORD_AUDIO -> {
                                     RecordAudioPermissionTextProvider()
                                 }

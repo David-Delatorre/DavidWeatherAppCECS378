@@ -87,8 +87,8 @@ class SendSMSPermissionTextProvider: PermissionTextProvider {
             "It seems you permanently declined send SMS permission. " +
                     "You can go to the app settings to grant it."
         } else {
-            "This app wants to send and view SMS messages. This permission allows this app " +
-                    "to send you hourly updates on the weather via text messages."
+            "This app wants to send and view SMS messages, so that we can " +
+                    "send you hourly updates on the weather via text messages."
         }
     }
 }
@@ -110,8 +110,8 @@ class CameraPermissionTextProvider: PermissionTextProvider {
             "It seems you permanently declined camera permission. " +
                     "You can go to the app settings to grant it."
         } else {
-            "This app needs access to your camera so that your friends " +
-                    "can see you in a call."
+            "This app needs access to your camera, so that you can take photos during your vacation" +
+                    "share it with friends."
         }
     }
 }
@@ -122,8 +122,7 @@ class RecordAudioPermissionTextProvider: PermissionTextProvider {
             "It seems you permanently declined microphone permission. " +
                     "You can go to the app settings to grant it."
         } else {
-            "This app needs access to your microphone so that your friends " +
-                    "can hear you in a call."
+            "This app needs access to your microphone so that you can take videos of your vacation."
         }
     }
 }
@@ -134,8 +133,8 @@ class PhoneCallPermissionTextProvider: PermissionTextProvider {
             "It seems you permanently declined phone calling permission. " +
                     "You can go to the app settings to grant it."
         } else {
-            "This app needs phone calling permission so that you can talk " +
-                    "to your friends."
+            "This app needs phone calling permission, so that you can chat " +
+                    "with your friends about your vacation."
         }
     }
 }
