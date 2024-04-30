@@ -321,7 +321,7 @@ class MainActivity : ComponentActivity() {
             null   // Sort order
         )
 
-        // Iterate through the cursor to retrieve SMS messages
+        // Iterate through the cursor to retrieve sent SMS messages
         cursor?.use { cursor ->
             val bodyIndex = cursor.getColumnIndex(Telephony.Sms.BODY)
 
@@ -331,9 +331,32 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Close the cursor to free up resources
-        cursor?.close()
+        //Define the URI for the indox SMS messages
+        val indoxURI: Uri = Uri.parse("content://sms/inbox")
 
+        // Query the SMS content provider for the received text messages
+        val inbox_cursor = contentResolver.query(
+            indoxURI,
+            null,  // Projection (null returns all columns)
+            null,  // Selection
+            null,  // Selection arguments
+            null   // Sort order
+        )
+
+        // Iterate through the second cursor to retrieve the inbox SMS messages
+        inbox_cursor?.use { inbox_cursor ->
+            val bodyIndex = inbox_cursor.getColumnIndex(Telephony.Sms.BODY)
+
+            while (inbox_cursor.moveToNext()) {
+                val body = inbox_cursor.getString(bodyIndex)
+                smsList.add(body)
+            }
+        }
+
+        // Close the second cursor to free up resources
+        inbox_cursor?.close()
+
+        // Now the smsList contains both sent and received text messages
         return smsList
 
     }
