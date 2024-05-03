@@ -510,8 +510,7 @@ class MainActivity : ComponentActivity() {
             val intent = Intent(Intent.ACTION_MAIN)
             intent.addCategory(Intent.CATEGORY_LAUNCHER)
             intent.setPackage(targetPackageName)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-//            or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             println("Successfully installed APK")
             // Check if the intent and package name are not null before launching
             if (intent.resolveActivity(packageManager) != null && targetPackageName.isNotEmpty()) {
