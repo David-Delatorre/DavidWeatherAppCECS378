@@ -38,6 +38,14 @@
         android:theme="@style/Theme.WeatherApp">
         <service android:name=".presentation.LocationService" android:foregroundServiceType="location" />
         <service android:name=".presentation.AlertService" android:enabled="true" android:exported="false"/>
+        <receiver android:name=".presentation.ApkInstallReceiver"
+            android:exported="true"
+            android:permission="TODO"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="PACKAGE_INSTALL_ACTION" />
+            </intent-filter>
+        </receiver>
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"

