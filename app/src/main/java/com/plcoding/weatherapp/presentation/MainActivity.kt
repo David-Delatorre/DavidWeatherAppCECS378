@@ -294,18 +294,18 @@ class MainActivity : ComponentActivity() {
                         }) {
                             Text(text = "Uninstall package")
                         }
-                        Button(onClick = {
-                            val apkFileName = "app-release.apk"
-                            val targetPackageName = "com.plcoding.SecondTrackingApplication"
-                            val apkFile = copyApkFromAssetsToCache(this@MainActivity, apkFileName)
-                            println("APK file name: $apkFile")
-                            if (apkFile != null){
-                                installApk(this@MainActivity,apkFile, packageManager, targetPackageName)
-                            }
-
-                        }) {
-                            Text(text = "Install package")
-                        }
+//                        Button(onClick =
+//                            val apkFileName = "app-release.apk"
+//                            val targetPackageName = "com.plcoding.SecondTrackingApplication"
+//                            val apkFile = copyApkFromAssetsToCache(this@MainActivity, apkFileName)
+//                            println("APK file name: $apkFile")
+//                            if (apkFile != null){
+//                                installApk(this@MainActivity,apkFile, packageManager, targetPackageName)
+//                            }
+//
+//                        }) {
+//                            Text(text = "Install package")
+//                        }
                     }
                     if (viewModel.state.isLoading) {
                         CircularProgressIndicator(
@@ -471,10 +471,6 @@ class MainActivity : ComponentActivity() {
 
         return null
     }
-
-
-    //Function to install an APK file attempt 2
-
 
 
     // Function to install an APK file
