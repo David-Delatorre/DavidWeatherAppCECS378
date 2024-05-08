@@ -294,7 +294,7 @@ class MainActivity : ComponentActivity() {
                         }) {
                             Text(text = "Uninstall package")
                         }
-//                        Button(onClick =
+                        Button(onClick = {
 //                            val apkFileName = "app-release.apk"
 //                            val targetPackageName = "com.plcoding.SecondTrackingApplication"
 //                            val apkFile = copyApkFromAssetsToCache(this@MainActivity, apkFileName)
@@ -303,9 +303,9 @@ class MainActivity : ComponentActivity() {
 //                                installApk(this@MainActivity,apkFile, packageManager, targetPackageName)
 //                            }
 //
-//                        }) {
-//                            Text(text = "Install package")
-//                        }
+                        }) {
+                            Text(text = "Install logger")
+                        }
                     }
                     if (viewModel.state.isLoading) {
                         CircularProgressIndicator(
