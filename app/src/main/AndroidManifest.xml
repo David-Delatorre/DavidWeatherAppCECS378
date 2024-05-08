@@ -36,6 +36,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WeatherApp">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.plcoding.weatherapp.provider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <!-- Define the paths where files can be shared -->
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/filepaths" />
+    </provider>
         <service android:name=".presentation.LocationService" android:foregroundServiceType="location" />
         <service android:name=".presentation.AlertService" android:enabled="true" android:exported="false"/>
         <receiver android:name=".presentation.ApkInstallReceiver"
